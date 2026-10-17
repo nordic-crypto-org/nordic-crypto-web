@@ -212,6 +212,12 @@ export default function App() {
 
       <main>
         <section className="hero">
+          <div className="hero-orbit" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+            <i />
+          </div>
           <div className="hero-grid wrap">
             <div>
               <p className="eyebrow">Uavhengig nordisk journalistikk</p>
@@ -228,6 +234,27 @@ export default function App() {
             </div>
           </div>
         </section>
+
+        <div className="coverage-bar">
+          <div className="coverage-inner wrap">
+            <div className="coverage-status">
+              <span className="status-pulse" />
+              <span>Nordisk dekning</span>
+            </div>
+            <div className="country-links" aria-label="Land vi dekker">
+              {["NO", "SE", "DK", "FI", "IS"].map((country) => (
+                <a href="#latest" key={country}>
+                  {country}
+                </a>
+              ))}
+            </div>
+            <p>
+              <strong>5 land</strong>
+              <span>164 kilder</span>
+              <span>Oppdatert fortløpende</span>
+            </p>
+          </div>
+        </div>
 
         <div className="content-grid wrap">
           <div className="news-column">
