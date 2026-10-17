@@ -1,53 +1,9 @@
 ---
-import App, {
-  type Market,
-  type NordicEvent,
-  type Story,
-} from "../App"
+import App from "../App"
 import "../index.css"
+import { fallbackHomepageData, getHomepageData } from "../lib/api"
 
-const API = "https://nordiccrypto.no/api/v1"
-
-let initialStories: Story[] = []
-let initialEvents: NordicEvent[] = []
-let initialMarket: Market | null = null
-let initialUpdated: string | null = null
-
-try {
-  const [newsResponse, eventsResponse, marketsResponse] = await Promise.all([
-    fetch(`${API}/news/latest.json`),
-    fetch(`${API}/events/upcoming.json`),
-    fetch(`${API}/markets/aggregated.json`),
-  ])
-
-  if (newsResponse.ok && eventsResponse.ok && marketsResponse.ok) {
-    const news = await newsResponse.json()
-    const eventData = await eventsResponse.json()
-    const marketData = await marketsResponse.json()
-    const latest = (news.items as Story[]).slice(0, 5)
-
-    initialStories = await Promise.all(
-      latest.map(async (story) => {
-        try {
-          const response = await fetch(`${API}/news/${story.id}.json`)
-          if (!response.ok) return story
-          const detail = await response.json()
-          return detail.item || detail
-        } catch {
-          return story
-        }
-      }),
-    )
-    initialEvents = (eventData.events as NordicEvent[]).slice(0, 3)
-    initialMarket =
-      (marketData.pairs as (Market & { symbol: string })[]).find(
-        (pair) => pair.symbol === "BTC-NOK",
-      ) || null
-    initialUpdated = news.updated || news.generated_at || null
-  }
-} catch {
-  // React has a local fallback and retries the public API after hydration.
-}
+const initialData = await getHomepageData().catch(() => fallbackHomepageData)
 ---
 
 <!doctype html>
@@ -67,10 +23,7 @@ try {
   <body>
     <App
       client:load
-      initialStories={initialStories}
-      initialEvents={initialEvents}
-      initialMarket={initialMarket}
-      initialUpdated={initialUpdated}
+      initialData={initialData}
     />
   </body>
 </html>
