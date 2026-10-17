@@ -3,70 +3,92 @@ import { useEffect, useState } from "react"
 type IconName = "arrow" | "calendar" | "chevron" | "globe" | "menu" | "moon" | "sun"
 
 type Story = {
+  id: string
   country: string
-  date: string
-  source: string
+  published: string
+  source_name: string
   title: string
-  summary: string
+  title_en?: string | null
+  title_i18n?: Record<string, string>
+  summary?: string
+  summary_i18n?: Record<string, string>
   topics: string[]
+  language_code?: string
 }
 
-const stories: Story[] = [
+type NordicEvent = {
+  id: string
+  title: string
+  start: string
+  city?: string | null
+  country: string
+  online?: boolean
+  html_urls?: Record<string, string>
+}
+
+type Market = {
+  price: string
+  min: string
+  max: string
+  exchange_count: number
+  updated_at: string
+}
+
+const API = "https://nordiccrypto.no/api/v1"
+const SITE = "https://nordiccrypto.no/nn"
+
+const fallbackStories: Story[] = [
   {
-    country: "SE",
-    date: "16. oktober",
-    source: "Kryptovalutaguiden",
-    title:
-      "Canton Foundation inngår avtale med Meritz Securities om tokenisering",
-    summary:
-      "Samarbeidet skal undersøke hvordan tradisjonelle aktiva som obligasjoner kan tokeniseres og gjøres tilgjengelige for institusjonelle investorer.",
-    topics: ["Tokenisering", "Næringsliv"],
-  },
-  {
+    id: "2cb0ee76f54a",
     country: "NO",
-    date: "15. oktober",
-    source: "Altaposten",
-    title: "Kryptostrid i Kautokeino: Hvor utbredt er mining egentlig?",
+    published: "2026-10-16T10:24:41+00:00",
+    source_name: "Ságat",
+    title: "Avviser krypto-på-kammerset-påstand",
     summary:
-      "Et nytt spørsmål til Norges digitaliseringsminister setter søkelyset på kryptominingens rolle i landets voksende datasenterbransje.",
-    topics: ["Mining", "Politik"],
-  },
-  {
-    country: "NO",
-    date: "15. oktober",
-    source: "Finanstilsynet",
-    title:
-      "Finanstilsynet innfører nye MiCA-regler for betydelige tokenutstedere",
-    summary:
-      "De nye prosedyrereglene fastsetter hvordan Den europeiske banktilsynsmyndigheten kan ilegge bøter og tvangsmulkt.",
-    topics: ["Regulering", "MiCA"],
-  },
-  {
-    country: "SE",
-    date: "15. oktober",
-    source: "Kaupr",
-    title: "Riksbanken vil forberede lovgivning for en mulig digital krone",
-    summary:
-      "Den svenske sentralbanken viser til sikkerhetssituasjonen, den digitale euroen og stablecoins, og ønsker at lovarbeidet starter nå.",
-    topics: ["Politik", "Bank"],
+      "Bransjeorganisasjonen Norsk Datasenter Industri avviser at kryptoutvinning er ein vanleg måte å starte opp i datasenterbransjen på.",
+    topics: ["mining", "policy"],
+    language_code: "no",
   },
 ]
 
-const events = [
-  {
-    day: "22",
-    month: "OKT",
-    title: "Nordic Blockchain Conference",
-    place: "København, DK",
-  },
-  { day: "29", month: "OKT", title: "Bitcoin Oslo Meetup", place: "Oslo, NO" },
-  {
-    day: "05",
-    month: "NOV",
-    title: "Web3 Builders Helsinki",
-    place: "Helsinki, FI",
-  },
-]
+const topicNames: Record<string, string> = {
+  banking: "Bank",
+  bitcoin: "Bitcoin",
+  business: "Næringsliv",
+  crime: "Kriminalitet",
+  mica: "MiCA",
+  mining: "Utvinning",
+  policy: "Politikk",
+  regulation: "Regulering",
+  stablecoins: "Stablecoins",
+  tax: "Skatt",
+  tokenisation: "Tokenisering",
+}
+
+function storyTitle(story: Story) {
+  return (
+    story.title_i18n?.nn ||
+    (story.language_code === "no" ? story.title : story.title_en) ||
+    story.title
+  )
+}
+
+function storySummary(story: Story) {
+  return story.summary_i18n?.nn || story.summary || ""
+}
+
+function formatDate(value: string, options?: Intl.DateTimeFormatOptions) {
+  return new Intl.DateTimeFormat("nn-NO", options || {
+    day: "numeric",
+    month: "long",
+  }).format(new Date(value))
+}
+
+function formatPrice(value: string) {
+  return new Intl.NumberFormat("nn-NO", {
+    maximumFractionDigits: 0,
+  }).format(Number(value))
+}
 
 function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
   const paths: Record<IconName, React.ReactNode> = {
@@ -118,16 +140,18 @@ function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
 function SectionLabel({
   children,
   action,
+  actionHref = "#latest",
 }: {
   children: React.ReactNode
   action?: string
+  actionHref?: string
 }) {
   return (
     <div className="section-label">
       <span>{children}</span>
       <span className="section-line" />
       {action && (
-        <a className="section-action" href="#latest">
+        <a className="section-action" href={actionHref}>
           {action} <Icon name="arrow" size={16} />
         </a>
       )}
@@ -140,18 +164,78 @@ function Tag({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const [darkMode, setDarkMode] = useState(false)
+  const [darkMode, setDarkMode] = useState(
+    () => localStorage.getItem("nc-theme") === "dark",
+  )
   const [menuOpen, setMenuOpen] = useState(false)
+  const [stories, setStories] = useState<Story[]>(fallbackStories)
+  const [events, setEvents] = useState<NordicEvent[]>([])
+  const [market, setMarket] = useState<Market | null>(null)
+  const [updated, setUpdated] = useState<string | null>(null)
+  const [dataError, setDataError] = useState(false)
 
   useEffect(() => {
     document.documentElement.dataset.theme = darkMode ? "dark" : "light"
+    document.documentElement.lang = "nn"
+    localStorage.setItem("nc-theme", darkMode ? "dark" : "light")
   }, [darkMode])
+
+  useEffect(() => {
+    async function loadHomepage() {
+      try {
+        const [newsResponse, eventsResponse, marketsResponse] =
+          await Promise.all([
+            fetch(`${API}/news/latest.json`),
+            fetch(`${API}/events/upcoming.json`),
+            fetch(`${API}/markets/aggregated.json`),
+          ])
+
+        if (!newsResponse.ok || !eventsResponse.ok || !marketsResponse.ok) {
+          throw new Error("Eitt eller fleire endepunkt svarte ikkje")
+        }
+
+        const news = await newsResponse.json()
+        const eventData = await eventsResponse.json()
+        const marketData = await marketsResponse.json()
+        const latest = (news.items as Story[]).slice(0, 5)
+
+        const detailedStories = await Promise.all(
+          latest.map(async (story) => {
+            try {
+              const response = await fetch(`${API}/news/${story.id}.json`)
+              if (!response.ok) return story
+              const detail = await response.json()
+              return detail.item || detail
+            } catch {
+              return story
+            }
+          }),
+        )
+
+        setStories(detailedStories)
+        setEvents((eventData.events as NordicEvent[]).slice(0, 3))
+        setMarket(
+          marketData.pairs.find(
+            (pair: { symbol: string }) => pair.symbol === "BTC-NOK",
+          ) || null,
+        )
+        setUpdated(news.updated || news.generated_at || null)
+      } catch {
+        setDataError(true)
+      }
+    }
+
+    loadHomepage()
+  }, [])
+
+  const leadStory = stories[0]
+  const latestStories = stories.slice(1)
 
   return (
     <div className="app-shell">
       <header className="site-header">
         <div className="header-top wrap">
-          <a className="brand" href="#" aria-label="Nordic Crypto forside">
+          <a className="brand" href={`${SITE}/`} aria-label="Nordic Crypto framside">
             <img src="/brand/shield-band.svg" alt="" />
             <span>
               Nordic <strong>Crypto</strong>
@@ -159,34 +243,40 @@ export default function App() {
           </a>
           <div className="header-actions">
             <a className="subscribe-button" href="#newsletter">
-              Få nyhetsbrevet
+              Få nyheitsbrevet
             </a>
             <button
               className="icon-button"
               type="button"
               onClick={() => setDarkMode((mode) => !mode)}
               aria-label={
-                darkMode ? "Skift til lyst tema" : "Skift til mørkt tema"
+                darkMode ? "Byt til lyst tema" : "Byt til mørkt tema"
               }
             >
               <Icon name={darkMode ? "sun" : "moon"} />
             </button>
-            <button
-              className="language-button"
-              type="button"
-              aria-label="Velg språk"
-            >
-              <Icon name="globe" size={18} />
-              <span>NO</span>
-              <Icon name="chevron" size={14} />
-            </button>
+            <details className="language-menu">
+              <summary className="language-button" aria-label="Vel språk">
+                <Icon name="globe" size={18} />
+                <span>NN</span>
+                <Icon name="chevron" size={14} />
+              </summary>
+              <div>
+                <a href="https://nordiccrypto.no/nn/">Nynorsk</a>
+                <a href="https://nordiccrypto.no/nb/">Bokmål</a>
+                <a href="https://nordiccrypto.no/">English</a>
+                <a href="https://nordiccrypto.no/sv/">Svenska</a>
+                <a href="https://nordiccrypto.no/da/">Dansk</a>
+                <a href="https://nordiccrypto.no/fi/">Suomi</a>
+              </div>
+            </details>
             <button
               className="menu-button"
               type="button"
               onClick={() => setMenuOpen((open) => !open)}
               aria-expanded={menuOpen}
               aria-controls="main-navigation"
-              aria-label="Åpne meny"
+              aria-label="Opne meny"
             >
               <Icon name="menu" />
             </button>
@@ -196,16 +286,16 @@ export default function App() {
           <nav
             className="main-nav wrap"
             id="main-navigation"
-            aria-label="Hovedmeny"
+            aria-label="Hovudmeny"
           >
-            <a className="active" href="#latest">
-              Nyheter
+            <a className="active" href={`${SITE}/`}>
+              Nyheiter
             </a>
-            <a href="#events">Kalender</a>
-            <a href="#markets">Markeder</a>
-            <a href="#regulation">Regulering</a>
-            <a href="#research">Forskning</a>
-            <a href="#people">Personer</a>
+            <a href={`${SITE}/calendar/`}>Kalender</a>
+            <a href={`${SITE}/newsletter/`}>Nyheitsbrev</a>
+            <a href={`${SITE}/markets/`}>Marknader</a>
+            <a href={`${SITE}/org-chart/`}>Kven er kven</a>
+            <a href={`${SITE}/academia/`}>Akademia</a>
           </nav>
         </div>
       </header>
@@ -221,15 +311,20 @@ export default function App() {
           <div className="hero-grid wrap">
             <div>
               <p className="eyebrow">Uavhengig nordisk journalistikk</p>
-              <h1>Krypto i Norden. Uten støy.</h1>
+              <h1>Krypto i Norden. Utan støy.</h1>
             </div>
             <div className="hero-copy">
               <p>
-                Nyheter, regulering og arrangementer fra Danmark, Norge,
-                Sverige, Finland og Island — samlet, verifisert og forklart.
+                Nyheiter, regulering og arrangement frå Noreg, Sverige, Danmark,
+                Finland og Island — samla, verifiserte og forklarte.
               </p>
               <p className="updated">
-                Oppdatert 17. oktober · 164 kilder fulgt
+                {dataError
+                  ? "Kunne ikkje oppdatere nett no"
+                  : updated
+                    ? `Oppdatert ${formatDate(updated, { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}`
+                    : "Hentar siste oppdatering"}
+                {" · "}Live data frå Nordic Crypto
               </p>
             </div>
           </div>
@@ -241,7 +336,7 @@ export default function App() {
               <span className="status-pulse" />
               <span>Nordisk dekning</span>
             </div>
-            <div className="country-links" aria-label="Land vi dekker">
+            <div className="country-links" aria-label="Land me dekkjer">
               {["NO", "SE", "DK", "FI", "IS"].map((country) => (
                 <a href="#latest" key={country}>
                   {country}
@@ -250,8 +345,8 @@ export default function App() {
             </div>
             <p>
               <strong>5 land</strong>
-              <span>164 kilder</span>
-              <span>Oppdatert fortløpende</span>
+              <span>Opne data</span>
+              <span>Oppdatert fortløpande</span>
             </p>
           </div>
         </div>
@@ -260,48 +355,58 @@ export default function App() {
           <div className="news-column">
             <article className="lead-story">
               <div className="lead-kicker">
-                <span className="country">NO</span>
-                <span>Politik &amp; mining</span>
+                <span className="country">{leadStory.country}</span>
+                <span>
+                  {leadStory.topics
+                    .slice(0, 2)
+                    .map((topic) => topicNames[topic] || topic)
+                    .join(" & ")}
+                </span>
                 <span className="live-dot" />
-                <span>Ny</span>
+                <span>Siste sak</span>
               </div>
-              <h2>
-                Norsk bransje avviser at datasentre vanligvis starter med
-                kryptomining
-              </h2>
-              <p>
-                Norsk Datasenter Industri avviser påstanden om at mining er en
-                vanlig vei inn i datasenterbransjen. Saken følger debatten
-                om Arctic Cores planer i Kautokeino.
-              </p>
+              <h2>{storyTitle(leadStory)}</h2>
+              <p>{storySummary(leadStory)}</p>
               <div className="lead-meta">
                 <span>
-                  Kilde: <strong>Ságat</strong>
+                  Kjelde: <strong>{leadStory.source_name}</strong>
                 </span>
-                <span>6 min. siden</span>
-                <a href="#latest">
-                  Les saken <Icon name="arrow" size={17} />
+                <span>{formatDate(leadStory.published)}</span>
+                <a
+                  href={`${SITE}/stories/${leadStory.id}/`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Les saka <Icon name="arrow" size={17} />
                 </a>
               </div>
             </article>
 
             <section className="latest" id="latest">
-              <SectionLabel action="Se alle nyheter">Siste nytt</SectionLabel>
+              <SectionLabel action="Sjå alle nyheiter" actionHref={`${SITE}/`}>
+                Siste nytt
+              </SectionLabel>
               <div className="story-list">
-                {stories.map((story) => (
+                {latestStories.map((story) => (
                   <article className="story" key={story.title}>
                     <div className="story-meta">
                       <span className="country">{story.country}</span>
-                      <span>{story.date}</span>
-                      <span>{story.source}</span>
+                      <span>{formatDate(story.published)}</span>
+                      <span>{story.source_name}</span>
                     </div>
                     <h3>
-                      <a href="#latest">{story.title}</a>
+                      <a
+                        href={`${SITE}/stories/${story.id}/`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {storyTitle(story)}
+                      </a>
                     </h3>
-                    <p>{story.summary}</p>
+                    {storySummary(story) && <p>{storySummary(story)}</p>}
                     <div className="tag-row">
                       {story.topics.map((topic) => (
-                        <Tag key={topic}>{topic}</Tag>
+                        <Tag key={topic}>{topicNames[topic] || topic}</Tag>
                       ))}
                     </div>
                   </article>
@@ -312,96 +417,110 @@ export default function App() {
 
           <aside className="side-column">
             <section className="side-section" id="events">
-              <SectionLabel>Kommende i Norden</SectionLabel>
+              <SectionLabel>Dette skjer i Norden</SectionLabel>
               <div className="event-list">
                 {events.map((event) => (
-                  <a className="event" href="#events" key={event.title}>
+                  <a
+                    className="event"
+                    href={event.html_urls?.nn || event.html_urls?.en || `${SITE}/calendar/`}
+                    target="_blank"
+                    rel="noreferrer"
+                    key={event.id}
+                  >
                     <span className="event-date">
-                      <strong>{event.day}</strong>
-                      <small>{event.month}</small>
+                      <strong>
+                        {formatDate(event.start, { day: "2-digit" })}
+                      </strong>
+                      <small>
+                        {formatDate(event.start, { month: "short" }).toUpperCase()}
+                      </small>
                     </span>
                     <span className="event-info">
                       <strong>{event.title}</strong>
-                      <span>{event.place}</span>
+                      <span>
+                        {event.online
+                          ? "På nett"
+                          : [event.city, event.country].filter(Boolean).join(", ")}
+                      </span>
                     </span>
                   </a>
                 ))}
+                {!events.length && (
+                  <p className="loading-note">Hentar arrangement…</p>
+                )}
               </div>
-              <a className="text-link" href="#events">
-                <Icon name="calendar" size={17} /> Se hele kalenderen
+              <a className="text-link" href={`${SITE}/calendar/`}>
+                <Icon name="calendar" size={17} /> Sjå heile kalenderen
               </a>
             </section>
 
             <section className="market-card" id="markets">
               <div className="market-heading">
                 <div>
-                  <p className="eyebrow">Nordiske markeder</p>
+                  <p className="eyebrow">Nordiske marknader</p>
                   <h2>Bitcoin</h2>
                 </div>
-                <span className="positive">+2,4%</span>
+                <span className="positive">{market ? "Direkte" : "Hentar"}</span>
               </div>
               <p className="price">
-                745.821 <span>NOK</span>
+                {market ? formatPrice(market.price) : "—"} <span>NOK</span>
               </p>
-              <svg
-                className="sparkline"
-                viewBox="0 0 300 72"
-                role="img"
-                aria-label="Bitcoin-kursen er steget"
-                preserveAspectRatio="none"
-              >
-                <defs>
-                  <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop
-                      offset="0%"
-                      stopColor="currentColor"
-                      stopOpacity=".25"
-                    />
-                    <stop
-                      offset="100%"
-                      stopColor="currentColor"
-                      stopOpacity="0"
-                    />
-                  </linearGradient>
-                </defs>
-                <path
-                  className="chart-fill"
-                  d="M0 62 C25 57, 38 61, 58 46 S88 49, 110 38 S139 44, 163 31 S194 35, 214 18 S247 27, 268 12 S286 10, 300 5 L300 72 L0 72 Z"
-                />
-                <path
-                  className="chart-line"
-                  d="M0 62 C25 57, 38 61, 58 46 S88 49, 110 38 S139 44, 163 31 S194 35, 214 18 S247 27, 268 12 S286 10, 300 5"
-                />
-              </svg>
+              <div className="market-range">
+                <span>
+                  Låg <strong>{market ? formatPrice(market.min) : "—"}</strong>
+                </span>
+                <span />
+                <span>
+                  Høg <strong>{market ? formatPrice(market.max) : "—"}</strong>
+                </span>
+              </div>
               <div className="market-footer">
-                <span>Gjennomsnitt · 3 børser</span>
-                <a href="#markets">
-                  Alle priser <Icon name="arrow" size={15} />
+                <span>
+                  Gjennomsnitt · {market?.exchange_count || "—"} børsar
+                </span>
+                <a href={`${SITE}/markets/`}>
+                  Alle prisar <Icon name="arrow" size={15} />
                 </a>
               </div>
             </section>
 
             <section className="newsletter" id="newsletter">
-              <p className="eyebrow">Hver fredag</p>
-              <h2>Nordens viktigste kryptonyheter i innboksen din.</h2>
+              <p className="eyebrow">Kvar fredag</p>
+              <h2>Dei viktigaste kryptonyheitene i Norden i innboksen din.</h2>
               <p>
-                En ukentlig briefing med redaksjonens utvalgte saker. Ingen
-                annonser. Ingen støy.
+                Ei vekentleg oppsummering med dei utvalde sakene til
+                redaksjonen. Ingen annonsar. Ingen støy.
               </p>
-              <form onSubmit={(event) => event.preventDefault()}>
+              <form
+                method="post"
+                action="https://nordic-crypto-tips.nordiccrypto.workers.dev/api/subscribe"
+              >
+                <input type="hidden" name="site" value="nordic-crypto" />
+                <input type="hidden" name="lang" value="nn" />
                 <label htmlFor="email">E-postadresse</label>
                 <div className="input-group">
                   <input
                     id="email"
+                    name="email"
                     type="email"
-                    placeholder="deg@eksempel.no"
+                    required
+                    maxLength={254}
+                    autoComplete="email"
+                    placeholder="du@eksempel.no"
                   />
-                  <button type="submit" aria-label="Meld på nyhetsbrevet">
+                  <button type="submit" aria-label="Abonner på nyheitsbrevet">
                     <Icon name="arrow" />
                   </button>
                 </div>
+                <label className="newsletter-consent">
+                  <input name="consent" type="checkbox" value="yes" required />
+                  <span>
+                    Eg samtykkjer til at Nordic Crypto lagrar adressa og sender
+                    meg nyheitsbrevet.
+                  </span>
+                </label>
               </form>
-              <small>Gratis · Meld av når som helst</small>
+              <small>Gratis · Meld deg av når som helst</small>
             </section>
           </aside>
         </div>
@@ -410,39 +529,39 @@ export default function App() {
       <footer>
         <div className="footer-grid wrap">
           <div className="footer-brand">
-            <a className="brand" href="#">
+            <a className="brand" href={`${SITE}/`}>
               <img src="/brand/shield-band.svg" alt="" />
               <span>
                 Nordic <strong>Crypto</strong>
               </span>
             </a>
-            <p>Uavhengige nyheter om bitcoin, blokkjede og krypto i Norden.</p>
+            <p>Uavhengige nyheiter om bitcoin, blokkjede og krypto i Norden.</p>
           </div>
           <div>
             <p className="footer-title">Utforsk</p>
-            <a href="#latest">Nyheter</a>
-            <a href="#events">Kalender</a>
-            <a href="#markets">Markeder</a>
+            <a href={`${SITE}/`}>Nyheiter</a>
+            <a href={`${SITE}/calendar/`}>Kalender</a>
+            <a href={`${SITE}/markets/`}>Marknader</a>
           </div>
           <div>
-            <p className="footer-title">Om os</p>
-            <a href="#about">Om Nordic Crypto</a>
-            <a href="#ethics">Redaksjonelle prinsipper</a>
-            <a href="#contact">Kontakt</a>
+            <p className="footer-title">Om oss</p>
+            <a href={`${SITE}/about/`}>Om Nordic Crypto</a>
+            <a href={`${SITE}/ethics/`}>Redaksjonelle prinsipp</a>
+            <a href={`${SITE}/contact/`}>Kontakt</a>
           </div>
           <div>
             <p className="footer-title">Følg oss</p>
-            <a href="#telegram">Telegram</a>
-            <a href="#x">X / Twitter</a>
+            <a href="https://t.me/nordiccryptochat">Telegram</a>
+            <a href="https://x.com/nordiccryptobot">X / Twitter</a>
             <a href="https://github.com/nordic-crypto-org/nordic-crypto">
-              Kildekode
+              Kjeldekode
             </a>
           </div>
         </div>
         <div className="footer-bottom wrap">
           <span>© 2026 Nordic Crypto</span>
           <span>Design av Mari Svennevik Notland</span>
-          <span>Ingen informasjonskapsler · Ingen annonsesporing</span>
+          <span>Ingen informasjonskapslar · Inga annonsesporing</span>
           <span>MIT-lisens</span>
         </div>
       </footer>
