@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 
 type IconName = "arrow" | "calendar" | "chevron" | "globe" | "menu" | "moon" | "sun"
 
-type Story = {
+export type Story = {
   id: string
   country: string
   published: string
@@ -16,7 +16,7 @@ type Story = {
   language_code?: string
 }
 
-type NordicEvent = {
+export type NordicEvent = {
   id: string
   title: string
   start: string
@@ -26,7 +26,7 @@ type NordicEvent = {
   html_urls?: Record<string, string>
 }
 
-type Market = {
+export type Market = {
   price: string
   min: string
   max: string
@@ -163,22 +163,41 @@ function Tag({ children }: { children: React.ReactNode }) {
   return <span className="tag">{children}</span>
 }
 
-export default function App() {
-  const [darkMode, setDarkMode] = useState(
-    () => localStorage.getItem("nc-theme") === "dark",
-  )
+type AppProps = {
+  initialStories?: Story[]
+  initialEvents?: NordicEvent[]
+  initialMarket?: Market | null
+  initialUpdated?: string | null
+}
+
+export default function App({
+  initialStories = fallbackStories,
+  initialEvents = [],
+  initialMarket = null,
+  initialUpdated = null,
+}: AppProps) {
+  const [darkMode, setDarkMode] = useState(false)
+  const [themeReady, setThemeReady] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [newsStories, setNewsStories] = useState<Story[]>(fallbackStories)
-  const [events, setEvents] = useState<NordicEvent[]>([])
-  const [market, setMarket] = useState<Market | null>(null)
-  const [updated, setUpdated] = useState<string | null>(null)
+  const [newsStories, setNewsStories] = useState<Story[]>(
+    initialStories.length > 0 ? initialStories : fallbackStories,
+  )
+  const [events, setEvents] = useState<NordicEvent[]>(initialEvents)
+  const [market, setMarket] = useState<Market | null>(initialMarket)
+  const [updated, setUpdated] = useState<string | null>(initialUpdated)
   const [dataError, setDataError] = useState(false)
 
   useEffect(() => {
+    setDarkMode(localStorage.getItem("nc-theme") === "dark")
+    setThemeReady(true)
+  }, [])
+
+  useEffect(() => {
+    if (!themeReady) return
     document.documentElement.dataset.theme = darkMode ? "dark" : "light"
     document.documentElement.lang = "nn"
     localStorage.setItem("nc-theme", darkMode ? "dark" : "light")
-  }, [darkMode])
+  }, [darkMode, themeReady])
 
   useEffect(() => {
     async function loadHomepage() {
