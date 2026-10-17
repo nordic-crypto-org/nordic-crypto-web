@@ -1,4 +1,5 @@
 {
+  "title": "test",
   "description": "This web application offers secure cryptocurrency transactions and wallet management for users, ensuring a seamless and safe trading experience.",
   "robots": {
     "index": false
