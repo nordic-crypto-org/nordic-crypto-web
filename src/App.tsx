@@ -414,6 +414,7 @@ export default function App() {
         </div>
         <div className="footer-bottom wrap">
           <span>© 2026 Nordic Crypto</span>
+          <span>Design av Mari Svennevik Notland</span>
           <span>Ingen informasjonskapsler · Ingen annonsesporing</span>
           <span>MIT-lisens</span>
         </div>
