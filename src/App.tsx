@@ -17,18 +17,18 @@ const stories: Story[] = [
     date: "16. oktober",
     source: "Kryptovalutaguiden",
     title:
-      "Canton Foundation indgår aftale med Meritz Securities om tokenisering",
+      "Canton Foundation inngår avtale med Meritz Securities om tokenisering",
     summary:
-      "Samarbejdet skal undersøge, hvordan traditionelle aktiver som obligationer kan tokeniseres og gøres tilgængelige for institutionelle investorer.",
-    topics: ["Tokenisering", "Erhverv"],
+      "Samarbeidet skal undersøke hvordan tradisjonelle aktiva som obligasjoner kan tokeniseres og gjøres tilgjengelige for institusjonelle investorer.",
+    topics: ["Tokenisering", "Næringsliv"],
   },
   {
     country: "NO",
     date: "15. oktober",
     source: "Altaposten",
-    title: "Kryptostrid i Kautokeino: Hvor udbredt er mining egentlig?",
+    title: "Kryptostrid i Kautokeino: Hvor utbredt er mining egentlig?",
     summary:
-      "Et nyt spørgsmål til Norges digitaliseringsminister sætter fokus på kryptominingens rolle i landets voksende datacenterbranche.",
+      "Et nytt spørsmål til Norges digitaliseringsminister setter søkelyset på kryptominingens rolle i landets voksende datasenterbransje.",
     topics: ["Mining", "Politik"],
   },
   {
@@ -36,18 +36,18 @@ const stories: Story[] = [
     date: "15. oktober",
     source: "Finanstilsynet",
     title:
-      "Finanstilsynet indfører nye MiCA-regler for betydelige tokenudstedere",
+      "Finanstilsynet innfører nye MiCA-regler for betydelige tokenutstedere",
     summary:
-      "De nye procedureregler fastlægger, hvordan Den Europæiske Banktilsynsmyndighed kan udstede bøder og tvangsbøder.",
+      "De nye prosedyrereglene fastsetter hvordan Den europeiske banktilsynsmyndigheten kan ilegge bøter og tvangsmulkt.",
     topics: ["Regulering", "MiCA"],
   },
   {
     country: "SE",
     date: "15. oktober",
     source: "Kaupr",
-    title: "Riksbanken vil forberede lovgivning til en mulig digital krone",
+    title: "Riksbanken vil forberede lovgivning for en mulig digital krone",
     summary:
-      "Den svenske centralbank henviser til sikkerhedssituationen, den digitale euro og stablecoins og ønsker lovarbejdet sat i gang nu.",
+      "Den svenske sentralbanken viser til sikkerhetssituasjonen, den digitale euroen og stablecoins, og ønsker at lovarbeidet starter nå.",
     topics: ["Politik", "Bank"],
   },
 ]
@@ -68,7 +68,7 @@ const events = [
   },
 ]
 
-function Icon({ name, size = 20 }: { name: IconName size?: number }) {
+function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
   const paths: Record<IconName, React.ReactNode> = {
     arrow: (
       <>
@@ -159,7 +159,7 @@ export default function App() {
           </a>
           <div className="header-actions">
             <a className="subscribe-button" href="#newsletter">
-              Få nyhedsbrevet
+              Få nyhetsbrevet
             </a>
             <button
               className="icon-button"
@@ -174,10 +174,10 @@ export default function App() {
             <button
               className="language-button"
               type="button"
-              aria-label="Vælg sprog"
+              aria-label="Velg språk"
             >
               <Icon name="globe" size={18} />
-              <span>DA</span>
+              <span>NO</span>
               <Icon name="chevron" size={14} />
             </button>
             <button
@@ -186,7 +186,7 @@ export default function App() {
               onClick={() => setMenuOpen((open) => !open)}
               aria-expanded={menuOpen}
               aria-controls="main-navigation"
-              aria-label="Åbn menu"
+              aria-label="Åpne meny"
             >
               <Icon name="menu" />
             </button>
@@ -196,10 +196,10 @@ export default function App() {
           <nav
             className="main-nav wrap"
             id="main-navigation"
-            aria-label="Hovedmenu"
+            aria-label="Hovedmeny"
           >
             <a className="active" href="#latest">
-              Nyheder
+              Nyheter
             </a>
             <a href="#events">Kalender</a>
             <a href="#markets">Markeder</a>
@@ -214,16 +214,16 @@ export default function App() {
         <section className="hero">
           <div className="hero-grid wrap">
             <div>
-              <p className="eyebrow">Uafhængig nordisk journalistik</p>
-              <h1>Krypto i Norden. Uden støj.</h1>
+              <p className="eyebrow">Uavhengig nordisk journalistikk</p>
+              <h1>Krypto i Norden. Uten støy.</h1>
             </div>
             <div className="hero-copy">
               <p>
-                Nyheder, regulering og begivenheder fra Danmark, Norge, Sverige,
-                Finland og Island — samlet, verificeret og forklaret.
+                Nyheter, regulering og arrangementer fra Danmark, Norge,
+                Sverige, Finland og Island — samlet, verifisert og forklart.
               </p>
               <p className="updated">
-                Opdateret 17. oktober · 164 kilder fulgt
+                Oppdatert 17. oktober · 164 kilder fulgt
               </p>
             </div>
           </div>
@@ -239,12 +239,12 @@ export default function App() {
                 <span>Ny</span>
               </div>
               <h2>
-                Norsk branche afviser, at datacentre typisk starter med
+                Norsk bransje avviser at datasentre vanligvis starter med
                 kryptomining
               </h2>
               <p>
-                Norsk Datasenter Industri afviser påstanden om, at mining er en
-                almindelig vej ind i datacenterbranchen. Sagen følger debatten
+                Norsk Datasenter Industri avviser påstanden om at mining er en
+                vanlig vei inn i datasenterbransjen. Saken følger debatten
                 om Arctic Cores planer i Kautokeino.
               </p>
               <div className="lead-meta">
@@ -253,13 +253,13 @@ export default function App() {
                 </span>
                 <span>6 min. siden</span>
                 <a href="#latest">
-                  Læs historien <Icon name="arrow" size={17} />
+                  Les saken <Icon name="arrow" size={17} />
                 </a>
               </div>
             </article>
 
             <section className="latest" id="latest">
-              <SectionLabel action="Se alle nyheder">Seneste nyt</SectionLabel>
+              <SectionLabel action="Se alle nyheter">Siste nytt</SectionLabel>
               <div className="story-list">
                 {stories.map((story) => (
                   <article className="story" key={story.title}>
@@ -285,7 +285,7 @@ export default function App() {
 
           <aside className="side-column">
             <section className="side-section" id="events">
-              <SectionLabel>På vej i Norden</SectionLabel>
+              <SectionLabel>Kommende i Norden</SectionLabel>
               <div className="event-list">
                 {events.map((event) => (
                   <a className="event" href="#events" key={event.title}>
@@ -347,34 +347,34 @@ export default function App() {
                 />
               </svg>
               <div className="market-footer">
-                <span>Gennemsnit · 3 børser</span>
+                <span>Gjennomsnitt · 3 børser</span>
                 <a href="#markets">
-                  Alle kurser <Icon name="arrow" size={15} />
+                  Alle priser <Icon name="arrow" size={15} />
                 </a>
               </div>
             </section>
 
             <section className="newsletter" id="newsletter">
               <p className="eyebrow">Hver fredag</p>
-              <h2>Nordens vigtigste kryptonyheder i din indbakke.</h2>
+              <h2>Nordens viktigste kryptonyheter i innboksen din.</h2>
               <p>
-                En ugentlig briefing med redaktionens udvalgte historier. Ingen
-                annoncer. Ingen støj.
+                En ukentlig briefing med redaksjonens utvalgte saker. Ingen
+                annonser. Ingen støy.
               </p>
               <form onSubmit={(event) => event.preventDefault()}>
-                <label htmlFor="email">E-mailadresse</label>
+                <label htmlFor="email">E-postadresse</label>
                 <div className="input-group">
                   <input
                     id="email"
                     type="email"
-                    placeholder="dig@eksempel.dk"
+                    placeholder="deg@eksempel.no"
                   />
-                  <button type="submit" aria-label="Tilmeld nyhedsbrev">
+                  <button type="submit" aria-label="Meld på nyhetsbrevet">
                     <Icon name="arrow" />
                   </button>
                 </div>
               </form>
-              <small>Gratis · Afmeld når som helst</small>
+              <small>Gratis · Meld av når som helst</small>
             </section>
           </aside>
         </div>
@@ -389,22 +389,22 @@ export default function App() {
                 Nordic <strong>Crypto</strong>
               </span>
             </a>
-            <p>Uafhængige nyheder om bitcoin, blockchain og krypto i Norden.</p>
+            <p>Uavhengige nyheter om bitcoin, blokkjede og krypto i Norden.</p>
           </div>
           <div>
-            <p className="footer-title">Udforsk</p>
-            <a href="#latest">Nyheder</a>
+            <p className="footer-title">Utforsk</p>
+            <a href="#latest">Nyheter</a>
             <a href="#events">Kalender</a>
             <a href="#markets">Markeder</a>
           </div>
           <div>
             <p className="footer-title">Om os</p>
             <a href="#about">Om Nordic Crypto</a>
-            <a href="#ethics">Redaktionelle principper</a>
+            <a href="#ethics">Redaksjonelle prinsipper</a>
             <a href="#contact">Kontakt</a>
           </div>
           <div>
-            <p className="footer-title">Følg med</p>
+            <p className="footer-title">Følg oss</p>
             <a href="#telegram">Telegram</a>
             <a href="#x">X / Twitter</a>
             <a href="https://github.com/nordic-crypto-org/nordic-crypto">
@@ -414,8 +414,8 @@ export default function App() {
         </div>
         <div className="footer-bottom wrap">
           <span>© 2026 Nordic Crypto</span>
-          <span>Ingen cookies · Ingen annoncetrackere</span>
-          <span>MIT-licens</span>
+          <span>Ingen informasjonskapsler · Ingen annonsesporing</span>
+          <span>MIT-lisens</span>
         </div>
       </footer>
     </div>
