@@ -2,7 +2,6 @@ import { useEffect, useState } from "react"
 import Footer from "./components/Footer"
 import Header from "./components/Header"
 import Hero from "./components/Hero"
-import IconConcepts from "./components/IconConcepts"
 import Sidebar from "./components/Sidebar"
 import StoryFeed from "./components/StoryFeed"
 import { fallbackHomepageData, getHomepageData } from "./lib/api"
@@ -56,7 +55,6 @@ export default function App({
           <StoryFeed stories={data.stories} />
           <Sidebar events={data.events} market={data.market} />
         </div>
-        <IconConcepts />
       </main>
       <Footer />
     </div>
