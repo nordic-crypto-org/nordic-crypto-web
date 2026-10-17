@@ -168,7 +168,7 @@ export default function App() {
     () => localStorage.getItem("nc-theme") === "dark",
   )
   const [menuOpen, setMenuOpen] = useState(false)
-  const [stories, setStories] = useState<Story[]>(fallbackStories)
+  const [newsStories, setNewsStories] = useState<Story[]>(fallbackStories)
   const [events, setEvents] = useState<NordicEvent[]>([])
   const [market, setMarket] = useState<Market | null>(null)
   const [updated, setUpdated] = useState<string | null>(null)
@@ -212,7 +212,9 @@ export default function App() {
           }),
         )
 
-        setStories(detailedStories)
+        setNewsStories(
+          detailedStories.length > 0 ? detailedStories : fallbackStories,
+        )
         setEvents((eventData.events as NordicEvent[]).slice(0, 3))
         setMarket(
           marketData.pairs.find(
@@ -228,8 +230,8 @@ export default function App() {
     loadHomepage()
   }, [])
 
-  const leadStory = stories[0]
-  const latestStories = stories.slice(1)
+  const leadStory = newsStories[0] ?? fallbackStories[0]
+  const latestStories = newsStories.slice(1)
 
   return (
     <div className="app-shell">
