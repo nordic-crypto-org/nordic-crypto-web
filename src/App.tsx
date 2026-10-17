@@ -78,9 +78,12 @@ function storySummary(story: Story) {
 }
 
 function formatDate(value: string, options?: Intl.DateTimeFormatOptions) {
-  return new Intl.DateTimeFormat("nn-NO", options || {
-    day: "numeric",
-    month: "long",
+  return new Intl.DateTimeFormat("nn-NO", {
+    timeZone: "Europe/Oslo",
+    ...(options || {
+      day: "numeric",
+      month: "long",
+    }),
   }).format(new Date(value))
 }
 
